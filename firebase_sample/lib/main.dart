@@ -16,8 +16,8 @@ import 'dart:math';
 import 'dart:io';
 
 final googleSignIn = new GoogleSignIn();
-final analytics = new FirebaseAnalytics();
-final auth = FirebaseAuth.instance;
+final firebaseAnalytics = new FirebaseAnalytics();
+final firebaseAuth = FirebaseAuth.instance;
 
 final ThemeData kIOSTheme = new ThemeData(
   primarySwatch: Colors.orange,
@@ -46,8 +46,9 @@ class _AppContainerState extends State<AppContainer> {
 
   @override
   void initState() {
-    print("current user : " + googleSignIn.currentUser.toString());
+    print("init");
     appContextData = new AppContextData(personalImage: new AssetImage("assets/icon.png"));
+    _ensureLoggedIn();
     super.initState();
   }
 
@@ -67,23 +68,25 @@ class _AppContainerState extends State<AppContainer> {
     });
   }
 
-  Future _ensureLoggedIn() async {
+  Future<bool> _ensureLoggedIn() async {
     GoogleSignInAccount user = googleSignIn.currentUser;
     if (user == null)
       user = await googleSignIn.signInSilently();
     if (user == null) {
       await googleSignIn.signIn();
-    analytics.logLogin();
+      firebaseAnalytics.logLogin();
     }
-    if (await auth.currentUser() == null) {
-    GoogleSignInAuthentication credentials = await googleSignIn.currentUser.authentication;
-    await auth.signInWithGoogle(
-    idToken: credentials.idToken,
-    accessToken: credentials.accessToken,
-    );
+    if (await firebaseAuth.currentUser() == null) {
+      GoogleSignInAuthentication credentials = await googleSignIn.currentUser.authentication;
+      await firebaseAuth.signInWithGoogle(
+        idToken: credentials.idToken,
+        accessToken: credentials.accessToken,
+      );
     }
-    print("ensureLoggedIn");
-    AppContext.of(context).updatePersonalImage(googleSignIn.currentUser.photoUrl);
+    if (googleSignIn.currentUser != null) {
+      _updatePersonalImage(googleSignIn.currentUser.photoUrl);
+    }
+    return googleSignIn.currentUser != null;
   }
 }
 
@@ -155,32 +158,15 @@ class ChatScreenState extends State<ChatScreen> {
   bool _isComposing = false;
   final reference = FirebaseDatabase.instance.reference().child('messages');
 
-  Future<Null> _ensureLoggedIn() async {
-    GoogleSignInAccount user = googleSignIn.currentUser;
-    if (user == null)
-      user = await googleSignIn.signInSilently();
-    if (user == null) {
-      await googleSignIn.signIn();
-      analytics.logLogin();
-    }
-    if (await auth.currentUser() == null) {
-      GoogleSignInAuthentication credentials = await googleSignIn.currentUser.authentication;
-      await auth.signInWithGoogle(
-        idToken: credentials.idToken,
-        accessToken: credentials.accessToken,
-      );
-    }
-    print("ensureLoggedIn");
-    AppContext.of(context).updatePersonalImage(googleSignIn.currentUser.photoUrl);
-  }
 
   Future<Null> _handleSubmitted(String text) async {
     _textController.clear();
     setState(() {
       _isComposing = false;
     });
-    await _ensureLoggedIn();
-    _sendMessage(text: text);
+    if (await AppContext.of(context).ensureLoggedIn()){
+      _sendMessage(text: text);
+    }
   }
 
   void _sendMessage({ String text, String imageUrl }) {
@@ -190,7 +176,7 @@ class ChatScreenState extends State<ChatScreen> {
       'senderName': googleSignIn.currentUser.displayName,
       'senderPhotoUrl': googleSignIn.currentUser.photoUrl,
     });
-    analytics.logEvent(name: 'send_message');
+    firebaseAnalytics.logEvent(name: 'send_message');
   }
 
   @override
@@ -238,13 +224,14 @@ class ChatScreenState extends State<ChatScreen> {
               child: new IconButton(
                   icon: new Icon(Icons.photo_camera),
                   onPressed: () async {
-                    await _ensureLoggedIn();
-                    File imageFile = await ImagePicker.pickImage();
-                    int random = new Random().nextInt(100000);
-                    StorageReference ref = FirebaseStorage.instance.ref().child("image_$random.jpg");
-                    StorageUploadTask uploadTask = ref.put(imageFile);
-                    Uri downloadUrl = (await uploadTask.future).downloadUrl;
-                    _sendMessage(imageUrl: downloadUrl.toString());
+                    if (await AppContext.of(context).ensureLoggedIn()){
+                      File imageFile = await ImagePicker.pickImage();
+                      int random = new Random().nextInt(100000);
+                      StorageReference ref = FirebaseStorage.instance.ref().child("image_$random.jpg");
+                      StorageUploadTask uploadTask = ref.put(imageFile);
+                      Uri downloadUrl = (await uploadTask.future).downloadUrl;
+                      _sendMessage(imageUrl: downloadUrl.toString());
+                    }
                   },
               ),
             ),

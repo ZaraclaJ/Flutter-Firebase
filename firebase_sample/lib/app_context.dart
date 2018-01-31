@@ -18,10 +18,6 @@ class AppContextData {
 class AppContext extends InheritedWidget {
   final AppContextData appContextData;
 
-  final googleSignIn = new GoogleSignIn();
-  final firebaseAnalytics = new FirebaseAnalytics();
-  final firebaseAuth = FirebaseAuth.instance;
-
   final Function(String imageUrl) updatePersonalImage;
   final Function() ensureLoggedIn;
 
