@@ -1,3 +1,4 @@
+import 'package:firebase_sample/app_context.dart';
 import 'package:flutter/material.dart';
 
 
@@ -22,13 +23,12 @@ class DrawerContent extends StatelessWidget{
 }
 
 class DrawerHeaderContent extends StatelessWidget{
+  final double _imageSize = 100.0;
 
   @override
   Widget build(BuildContext context) {
-    final safeArea = MediaQuery.of(context).padding;
 
     return new DrawerHeader(
-      padding: new EdgeInsets.only(right : safeArea.right + 32.0, top : 32.0, bottom: 32.0),
       decoration: new BoxDecoration(
           color: Colors.black
       ),
@@ -36,11 +36,15 @@ class DrawerHeaderContent extends StatelessWidget{
           crossAxisAlignment: CrossAxisAlignment.end,
           mainAxisAlignment: MainAxisAlignment.end,
           children: <Widget>[
-            new Container(
-              child: new Image.asset(
-                "assets/icon.png",
-                height: 64.0,
-                width: 64.0,
+            new Padding(
+              padding: new EdgeInsets.only(bottom: 8.0, right: 8.0),
+              child: new Container(
+                height: _imageSize,
+                width: _imageSize,
+                decoration: new BoxDecoration(
+                  shape: BoxShape.circle,
+                  image: new DecorationImage(image: AppContext.of(context).appContextData.personalImage)
+                ),
               ),
             )
           ]

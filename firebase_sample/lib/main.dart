@@ -1,4 +1,5 @@
 
+import 'package:firebase_sample/app_context.dart';
 import 'package:firebase_sample/drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -18,7 +19,6 @@ final googleSignIn = new GoogleSignIn();
 final analytics = new FirebaseAnalytics();
 final auth = FirebaseAuth.instance;
 
-
 final ThemeData kIOSTheme = new ThemeData(
   primarySwatch: Colors.orange,
   primaryColor: Colors.grey[100],
@@ -33,7 +33,58 @@ final ThemeData kDefaultTheme = new ThemeData(
 const String _name = "Your Name";
 
 void main() {
-  runApp(new FriendlychatApp());
+  runApp(new AppContainer());
+}
+
+class AppContainer extends StatefulWidget {
+  @override
+  _AppContainerState createState() => new _AppContainerState();
+}
+
+class _AppContainerState extends State<AppContainer> {
+  AppContextData appContextData;
+
+  @override
+  void initState() {
+    print("current user : " + googleSignIn.currentUser.toString());
+    appContextData = new AppContextData(personalImage: new AssetImage("assets/icon.png"));
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return new AppContext(
+        appContextData: appContextData,
+        ensureLoggedIn: _ensureLoggedIn,
+        updatePersonalImage: _updatePersonalImage,
+        child: new FriendlychatApp());
+  }
+
+  _updatePersonalImage(String imageUrl) {
+    NetworkImage personalImage = new NetworkImage(imageUrl);
+    setState(() {
+      appContextData = appContextData.withPersonalImage(personalImage);
+    });
+  }
+
+  Future _ensureLoggedIn() async {
+    GoogleSignInAccount user = googleSignIn.currentUser;
+    if (user == null)
+      user = await googleSignIn.signInSilently();
+    if (user == null) {
+      await googleSignIn.signIn();
+    analytics.logLogin();
+    }
+    if (await auth.currentUser() == null) {
+    GoogleSignInAuthentication credentials = await googleSignIn.currentUser.authentication;
+    await auth.signInWithGoogle(
+    idToken: credentials.idToken,
+    accessToken: credentials.accessToken,
+    );
+    }
+    print("ensureLoggedIn");
+    AppContext.of(context).updatePersonalImage(googleSignIn.currentUser.photoUrl);
+  }
 }
 
 class FriendlychatApp extends StatelessWidget {
@@ -78,7 +129,7 @@ class ChatMessage extends StatelessWidget {
                   new Text(snapshot.value['senderName'], style: Theme.of(context).textTheme.subhead),
                   new Container(
                     margin: const EdgeInsets.only(top: 5.0),
-                    child: snapshot.value['imageUrl'] != null ?                //modified
+                    child: snapshot.value['imageUrl'] != null ?              //modified
                     new Image.network(                                         //new
                       snapshot.value['imageUrl'],                             //new
                       width: 250.0,                                           //new
@@ -113,13 +164,14 @@ class ChatScreenState extends State<ChatScreen> {
       analytics.logLogin();
     }
     if (await auth.currentUser() == null) {
-      GoogleSignInAuthentication credentials =
-      await googleSignIn.currentUser.authentication;
+      GoogleSignInAuthentication credentials = await googleSignIn.currentUser.authentication;
       await auth.signInWithGoogle(
         idToken: credentials.idToken,
         accessToken: credentials.accessToken,
       );
     }
+    print("ensureLoggedIn");
+    AppContext.of(context).updatePersonalImage(googleSignIn.currentUser.photoUrl);
   }
 
   Future<Null> _handleSubmitted(String text) async {
