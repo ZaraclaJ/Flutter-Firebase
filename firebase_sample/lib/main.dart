@@ -1,6 +1,3 @@
-// Copyright 2017, the Chromium project authors.  Please see the AUTHORS file
-// for details. All rights reserved. Use of this source code is governed by a
-// BSD-style license that can be found in the LICENSE file.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -9,6 +6,8 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'dart:async';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';         //new
+import 'package:firebase_database/ui/firebase_animated_list.dart';
 
 final googleSignIn = new GoogleSignIn();
 final analytics = new FirebaseAnalytics();
@@ -47,14 +46,14 @@ class FriendlychatApp extends StatelessWidget {
 
 @override
 class ChatMessage extends StatelessWidget {
-  ChatMessage({this.text, this.animationController});
-  final String text;
-  final AnimationController animationController;
+  ChatMessage({this.snapshot, this.animation});
+  final DataSnapshot snapshot;
+  final Animation animation;
 
   Widget build(BuildContext context) {
     return new SizeTransition(
       sizeFactor: new CurvedAnimation(
-          parent: animationController, curve: Curves.easeOut),
+          parent: animation, curve: Curves.easeOut),
       axisAlignment: 0.0,
       child: new Container(
         margin: const EdgeInsets.symmetric(vertical: 10.0),
@@ -64,17 +63,17 @@ class ChatMessage extends StatelessWidget {
             new Container(
               margin: const EdgeInsets.only(right: 16.0),
               child: new CircleAvatar(
-                  backgroundImage: new NetworkImage(googleSignIn.currentUser.photoUrl)
+                  backgroundImage: new NetworkImage(snapshot.value['senderPhotoUrl']),
               ),
             ),
             new Expanded(
               child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  new Text(googleSignIn.currentUser.displayName, style: Theme.of(context).textTheme.subhead),
+                  new Text(snapshot.value['senderName'], style: Theme.of(context).textTheme.subhead),
                   new Container(
                     margin: const EdgeInsets.only(top: 5.0),
-                    child: new Text(text),
+                    child: new Text(snapshot.value['text']),
                   ),
                 ],
               ),
@@ -91,10 +90,10 @@ class ChatScreen extends StatefulWidget {
   State createState() => new ChatScreenState();
 }
 
-class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
-  final List<ChatMessage> _messages = <ChatMessage>[];
+class ChatScreenState extends State<ChatScreen> {
   final TextEditingController _textController = new TextEditingController();
   bool _isComposing = false;
+  final reference = FirebaseDatabase.instance.reference().child('messages');
 
   Future<Null> _ensureLoggedIn() async {
     GoogleSignInAccount user = googleSignIn.currentUser;
@@ -124,17 +123,11 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   }
 
   void _sendMessage({ String text }) {
-    ChatMessage message = new ChatMessage(
-      text: text,
-      animationController: new AnimationController(
-        duration: new Duration(milliseconds: 700),
-        vsync: this,
-      ),
-    );
-    setState(() {
-      _messages.insert(0, message);
-    });
-    message.animationController.forward();
+    reference.push().set({                                         //new
+      'text': text,                                                //new
+      'senderName': googleSignIn.currentUser.displayName,          //new
+      'senderPhotoUrl': googleSignIn.currentUser.photoUrl,         //new
+    });                                                            //new
     analytics.logEvent(name: 'send_message');
   }
 
@@ -147,12 +140,19 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         ),
         body: new Column(children: <Widget>[
           new Flexible(
-              child: new ListView.builder(
-                padding: new EdgeInsets.all(8.0),
-                reverse: true,
-                itemBuilder: (_, int index) => _messages[index],
-                itemCount: _messages.length,
-              )),
+            child: new FirebaseAnimatedList(                            //new
+              query: reference,                                       //new
+              sort: (a, b) => b.key.compareTo(a.key),                 //new
+              padding: new EdgeInsets.all(8.0),                       //new
+              reverse: true,                                          //new
+              itemBuilder: (_, DataSnapshot snapshot, Animation<double> animation) { //new
+                return new ChatMessage(                               //new
+                    snapshot: snapshot,                                 //new
+                    animation: animation                                //new
+                );                                                    //new
+              },                                                      //new
+            ),                                                        //new
+          ),
           new Divider(height: 1.0),
           new Container(
             decoration:
@@ -203,12 +203,5 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
               new Border(top: new BorderSide(color: Colors.grey[200])))
               : null),
     );
-  }
-
-  @override
-  void dispose() {
-    for (ChatMessage message in _messages)
-      message.animationController.dispose();
-    super.dispose();
   }
 }
