@@ -6,7 +6,6 @@ class DrawerContent extends StatelessWidget{
 
   @override
   Widget build(BuildContext context) {
-
     return new Drawer(
       child:new ListView(
         padding: EdgeInsets.zero,
@@ -43,7 +42,7 @@ class DrawerHeaderContent extends StatelessWidget{
                 width: _imageSize,
                 decoration: new BoxDecoration(
                   shape: BoxShape.circle,
-                  image: new DecorationImage(image: AppContext.of(context).appContextData.personalImage)
+                  image: AppContext.of(context).appContextData.personalImage != null ? new DecorationImage(image: AppContext.of(context).appContextData.personalImage) : null,
                 ),
               ),
             )

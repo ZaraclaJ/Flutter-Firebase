@@ -46,9 +46,7 @@ class _AppContainerState extends State<AppContainer> {
 
   @override
   void initState() {
-    print("init");
-    appContextData = new AppContextData(personalImage: new AssetImage("assets/icon.png"));
-    _ensureLoggedIn();
+    appContextData = new AppContextData(personalImage: null);
     super.initState();
   }
 
