@@ -98,19 +98,7 @@ class FirebaseApp extends StatelessWidget {
       theme: defaultTargetPlatform == TargetPlatform.iOS
           ? kIOSTheme
           : kDefaultTheme,
-      home: new Scaffold(
-        appBar: new AppBar(
-            title: new Text("Firebase test"),
-            elevation: Theme.of(context).platform == TargetPlatform.iOS ? 0.0 : 4.0,
-            actions: <Widget>[
-              new IconButton(icon: new Icon(Icons.account_circle), onPressed: AppContext.of(context).ensureLoggedIn),
-            ]
-        ),
-        drawer: new DrawerContent(),
-        body: new SafeArea(
-            child: AppContext.of(context).appContextData.currentPage,
-        ),
-      )
+      home: AppContext.of(context).appContextData.currentPage,
     );
   }
 }

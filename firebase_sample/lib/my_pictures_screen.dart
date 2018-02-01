@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_database/ui/firebase_animated_list.dart';
 import 'package:firebase_sample/app_context.dart';
+import 'package:firebase_sample/drawer.dart';
 import 'package:firebase_sample/firebase_image.dart';
 import 'package:firebase_sample/main.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -28,21 +29,33 @@ class MyPictureScreenState extends State<MyPictureScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return new Center(
-      child: new GridView.builder(
-          gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 4, ),
-          itemCount: images.length,
-          itemBuilder: (BuildContext context, int index) {
-            return new GridTile(
-                child: new Padding(
-                  padding: new EdgeInsets.all(4.0),
-                  child: new Container(
-                    child: new Text(images[index].url),
-                    color: Colors.primaries[index % Colors.primaries.length],
+    return new Scaffold(
+      appBar: new AppBar(
+          title: new Text("My pictures"),
+          elevation: Theme.of(context).platform == TargetPlatform.iOS ? 0.0 : 4.0,
+          actions: <Widget>[
+            new IconButton(icon: new Icon(Icons.account_circle), onPressed: AppContext.of(context).ensureLoggedIn),
+          ]
+      ),
+      drawer: new DrawerContent(),
+      body: new SafeArea(
+        child: new Center(
+          child: new GridView.builder(
+              gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 4, ),
+              itemCount: images.length,
+              itemBuilder: (BuildContext context, int index) {
+                return new GridTile(
+                  child: new Padding(
+                    padding: new EdgeInsets.all(4.0),
+                    child: new Container(
+                      child: new Text(images[index].url),
+                      color: Colors.primaries[index % Colors.primaries.length],
+                    ),
                   ),
-                ),
-            );
-          }
+                );
+              }
+          ),
+        ),
       ),
     );
   }

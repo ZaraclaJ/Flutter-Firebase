@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_database/ui/firebase_animated_list.dart';
 import 'package:firebase_sample/app_context.dart';
+import 'package:firebase_sample/drawer.dart';
 import 'package:firebase_sample/main.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
@@ -44,28 +45,40 @@ class ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return new Column(children: <Widget>[
-      new Flexible(
-        child: new FirebaseAnimatedList(
-          query: reference,
-          sort: (a, b) => b.key.compareTo(a.key),
-          padding: new EdgeInsets.all(8.0),
-          reverse: true,
-          itemBuilder: (_, DataSnapshot snapshot, Animation<double> animation) {
-            return new ChatMessage(
-                snapshot: snapshot,
-                animation: animation
-            );
-          },
-        ),
+    return new Scaffold(
+      appBar: new AppBar(
+          title: new Text("Chat"),
+          elevation: Theme.of(context).platform == TargetPlatform.iOS ? 0.0 : 4.0,
+          actions: <Widget>[
+            new IconButton(icon: new Icon(Icons.account_circle), onPressed: AppContext.of(context).ensureLoggedIn),
+          ]
       ),
-      new Divider(height: 1.0),
-      new Container(
-        decoration:
-        new BoxDecoration(color: Theme.of(context).cardColor),
-        child: _buildTextComposer(),
+      drawer: new DrawerContent(),
+      body: new SafeArea(
+        child: new Column(children: <Widget>[
+          new Flexible(
+            child: new FirebaseAnimatedList(
+              query: reference,
+              sort: (a, b) => b.key.compareTo(a.key),
+              padding: new EdgeInsets.all(8.0),
+              reverse: true,
+              itemBuilder: (_, DataSnapshot snapshot, Animation<double> animation) {
+                return new ChatMessage(
+                    snapshot: snapshot,
+                    animation: animation
+                );
+              },
+            ),
+          ),
+          new Divider(height: 1.0),
+          new Container(
+            decoration:
+            new BoxDecoration(color: Theme.of(context).cardColor),
+            child: _buildTextComposer(),
+          ),
+        ]),
       ),
-    ]);
+    );
   }
 
   Widget _buildTextComposer() {
