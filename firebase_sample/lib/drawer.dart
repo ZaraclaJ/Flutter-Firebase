@@ -1,10 +1,13 @@
+import 'package:firebase_sample/compare_screen.dart';
 import 'package:firebase_sample/app_context.dart';
-import 'package:firebase_sample/chat.dart';
+import 'package:firebase_sample/chat_screen.dart';
+import 'package:firebase_sample/my_pictures_screen.dart';
 import 'package:flutter/material.dart';
 
 enum PageType {
   Chat,
   Compare,
+  MyPicture,
 }
 
 class DrawerContent extends StatelessWidget{
@@ -18,6 +21,7 @@ class DrawerContent extends StatelessWidget{
           new DrawerHeaderContent(),
           new ListTile(title: new Text("Chat"), leading: new Icon(Icons.chat), onTap: () => _navigateTo(context, PageType.Chat),),
           new ListTile(title: new Text("Compare"), leading: new Icon(Icons.compare), onTap: () => _navigateTo(context, PageType.Compare),),
+          new ListTile(title: new Text("My pictures"), leading: new Icon(Icons.photo_library), onTap: () => _navigateTo(context, PageType.MyPicture),),
           new Divider(),
           new AboutItem(),
         ],
@@ -31,7 +35,10 @@ class DrawerContent extends StatelessWidget{
         AppContext.of(context).updateCurrentPage(new ChatScreen());
         break;
       case PageType.Compare :
-        AppContext.of(context).updateCurrentPage(new Container());
+        AppContext.of(context).updateCurrentPage(new CompareScreen());
+        break;
+      case PageType.MyPicture :
+        AppContext.of(context).updateCurrentPage(new MyPictureScreen());
         break;
     }
     Navigator.of(context).pop();

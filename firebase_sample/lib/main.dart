@@ -1,6 +1,6 @@
 
 import 'package:firebase_sample/app_context.dart';
-import 'package:firebase_sample/chat.dart';
+import 'package:firebase_sample/chat_screen.dart';
 import 'package:firebase_sample/drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
