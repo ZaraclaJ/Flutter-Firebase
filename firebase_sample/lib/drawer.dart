@@ -1,6 +1,11 @@
 import 'package:firebase_sample/app_context.dart';
+import 'package:firebase_sample/chat.dart';
 import 'package:flutter/material.dart';
 
+enum PageType {
+  Chat,
+  Compare,
+}
 
 class DrawerContent extends StatelessWidget{
 
@@ -11,13 +16,25 @@ class DrawerContent extends StatelessWidget{
         padding: EdgeInsets.zero,
         children: <Widget>[
           new DrawerHeaderContent(),
-          new ListTile(title: new Text("Chat"), leading: new Icon(Icons.chat),),
-          new ListTile(title: new Text("Compare"), leading: new Icon(Icons.compare),),
+          new ListTile(title: new Text("Chat"), leading: new Icon(Icons.chat), onTap: () => _navigateTo(context, PageType.Chat),),
+          new ListTile(title: new Text("Compare"), leading: new Icon(Icons.compare), onTap: () => _navigateTo(context, PageType.Compare),),
           new Divider(),
           new AboutItem(),
         ],
       ),
     );
+  }
+
+  _navigateTo(BuildContext context, PageType page) {
+    switch (page){
+      case PageType.Chat :
+        AppContext.of(context).updateCurrentPage(new ChatScreen());
+        break;
+      case PageType.Compare :
+        AppContext.of(context).updateCurrentPage(new Container());
+        break;
+    }
+    Navigator.of(context).pop();
   }
 }
 

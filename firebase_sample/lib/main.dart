@@ -1,5 +1,6 @@
 
 import 'package:firebase_sample/app_context.dart';
+import 'package:firebase_sample/chat.dart';
 import 'package:firebase_sample/drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -8,12 +9,6 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'dart:async';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_database/ui/firebase_animated_list.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:math';
-import 'dart:io';
 
 final googleSignIn = new GoogleSignIn();
 final firebaseAnalytics = new FirebaseAnalytics();
@@ -46,7 +41,7 @@ class _AppContainerState extends State<AppContainer> {
 
   @override
   void initState() {
-    appContextData = new AppContextData(personalImage: null);
+    appContextData = new AppContextData(personalImage: null, currentPage: new ChatScreen());
     super.initState();
   }
 
@@ -56,7 +51,8 @@ class _AppContainerState extends State<AppContainer> {
         appContextData: appContextData,
         ensureLoggedIn: _ensureLoggedIn,
         updatePersonalImage: _updatePersonalImage,
-        child: new FriendlychatApp());
+        updateCurrentPage: _updateCurrentPage,
+        child: new FirebaseApp());
   }
 
   _updatePersonalImage(String imageUrl) {
@@ -86,9 +82,15 @@ class _AppContainerState extends State<AppContainer> {
     }
     return googleSignIn.currentUser != null;
   }
+
+  _updateCurrentPage(Widget page) {
+    setState(() {
+      appContextData = appContextData.withCurrentPage(page);
+    });
+  }
 }
 
-class FriendlychatApp extends StatelessWidget {
+class FirebaseApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
@@ -96,180 +98,19 @@ class FriendlychatApp extends StatelessWidget {
       theme: defaultTargetPlatform == TargetPlatform.iOS
           ? kIOSTheme
           : kDefaultTheme,
-      home: new ChatScreen(),
-    );
-  }
-}
-
-@override
-class ChatMessage extends StatelessWidget {
-  ChatMessage({this.snapshot, this.animation});
-  final DataSnapshot snapshot;
-  final Animation animation;
-
-  Widget build(BuildContext context) {
-    return new SizeTransition(
-      sizeFactor: new CurvedAnimation(
-          parent: animation, curve: Curves.easeOut),
-      axisAlignment: 0.0,
-      child: new Container(
-        margin: const EdgeInsets.symmetric(vertical: 10.0),
-        child: new Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            new Container(
-              margin: const EdgeInsets.only(right: 16.0),
-              child: new CircleAvatar(
-                  backgroundImage: new NetworkImage(snapshot.value['senderPhotoUrl']),
-              ),
-            ),
-            new Expanded(
-              child: new Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  new Text(snapshot.value['senderName'], style: Theme.of(context).textTheme.subhead),
-                  new Container(
-                    margin: const EdgeInsets.only(top: 5.0),
-                    child: snapshot.value['imageUrl'] != null ?              //modified
-                    new Image.network(                                         //new
-                      snapshot.value['imageUrl'],                             //new
-                      width: 250.0,                                           //new
-                    ) : new Text(snapshot.value['text']),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class ChatScreen extends StatefulWidget {
-  @override
-  State createState() => new ChatScreenState();
-}
-
-class ChatScreenState extends State<ChatScreen> {
-  final TextEditingController _textController = new TextEditingController();
-  bool _isComposing = false;
-  final reference = FirebaseDatabase.instance.reference().child('messages');
-
-
-  Future<Null> _handleSubmitted(String text) async {
-    _textController.clear();
-    setState(() {
-      _isComposing = false;
-    });
-    if (await AppContext.of(context).ensureLoggedIn()){
-      _sendMessage(text: text);
-    }
-  }
-
-  void _sendMessage({ String text, String imageUrl }) {
-    reference.push().set({
-      'text': text,
-      'imageUrl': imageUrl,
-      'senderName': googleSignIn.currentUser.displayName,
-      'senderPhotoUrl': googleSignIn.currentUser.photoUrl,
-    });
-    firebaseAnalytics.logEvent(name: 'send_message');
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return new Scaffold(
+      home: new Scaffold(
         appBar: new AppBar(
-          title: new Text("Firebase test"),
-          elevation: Theme.of(context).platform == TargetPlatform.iOS ? 0.0 : 4.0,
-          actions: <Widget>[
-            new IconButton(icon: new Icon(Icons.account_circle), onPressed: AppContext.of(context).ensureLoggedIn),
-          ]
+            title: new Text("Firebase test"),
+            elevation: Theme.of(context).platform == TargetPlatform.iOS ? 0.0 : 4.0,
+            actions: <Widget>[
+              new IconButton(icon: new Icon(Icons.account_circle), onPressed: AppContext.of(context).ensureLoggedIn),
+            ]
         ),
         drawer: new DrawerContent(),
         body: new SafeArea(
-          child: new Column(children: <Widget>[
-            new Flexible(
-              child: new FirebaseAnimatedList(                            //new
-                query: reference,                                       //new
-                sort: (a, b) => b.key.compareTo(a.key),                 //new
-                padding: new EdgeInsets.all(8.0),                       //new
-                reverse: true,                                          //new
-                itemBuilder: (_, DataSnapshot snapshot, Animation<double> animation) { //new
-                  return new ChatMessage(                               //new
-                      snapshot: snapshot,                                 //new
-                      animation: animation                                //new
-                  );                                                    //new
-                },                                                      //new
-              ),                                                        //new
-            ),
-            new Divider(height: 1.0),
-            new Container(
-              decoration:
-              new BoxDecoration(color: Theme.of(context).cardColor),
-              child: _buildTextComposer(),
-            ),
-          ]),
-        ));
-  }
-
-  Widget _buildTextComposer() {
-    return new IconTheme(
-      data: new IconThemeData(color: Theme.of(context).accentColor),
-      child: new Container(
-          margin: const EdgeInsets.symmetric(horizontal: 8.0),
-          child: new Row(children: <Widget>[
-            new Container(
-              margin: new EdgeInsets.symmetric(horizontal: 4.0),
-              child: new IconButton(
-                  icon: new Icon(Icons.photo_camera),
-                  onPressed: () async {
-                    if (await AppContext.of(context).ensureLoggedIn()){
-                      File imageFile = await ImagePicker.pickImage();
-                      int random = new Random().nextInt(100000);
-                      StorageReference ref = FirebaseStorage.instance.ref().child("image_$random.jpg");
-                      StorageUploadTask uploadTask = ref.put(imageFile);
-                      Uri downloadUrl = (await uploadTask.future).downloadUrl;
-                      _sendMessage(imageUrl: downloadUrl.toString());
-                    }
-                  },
-              ),
-            ),
-            new Flexible(
-              child: new TextField(
-                controller: _textController,
-                onChanged: (String text) {
-                  setState(() {
-                    _isComposing = text.length > 0;
-                  });
-                },
-                onSubmitted: _handleSubmitted,
-                decoration:
-                new InputDecoration.collapsed(hintText: "Send a message"),
-              ),
-            ),
-            new Container(
-                margin: new EdgeInsets.symmetric(horizontal: 4.0),
-                child: Theme.of(context).platform == TargetPlatform.iOS
-                    ? new CupertinoButton(
-                  child: new Text("Send"),
-                  onPressed: _isComposing
-                      ? () => _handleSubmitted(_textController.text)
-                      : null,
-                )
-                    : new IconButton(
-                  icon: new Icon(Icons.send),
-                  onPressed: _isComposing
-                      ? () => _handleSubmitted(_textController.text)
-                      : null,
-                )),
-          ]),
-          decoration: Theme.of(context).platform == TargetPlatform.iOS
-              ? new BoxDecoration(
-              border:
-              new Border(top: new BorderSide(color: Colors.grey[200])))
-              : null),
+            child: AppContext.of(context).appContextData.currentPage,
+        ),
+      )
     );
   }
 }
