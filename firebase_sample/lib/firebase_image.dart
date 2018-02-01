@@ -1,5 +1,5 @@
 class FirebaseImage {
-  int ownerId;
+  String ownerId;
   String url;
 
   FirebaseImage(this.ownerId, this.url);

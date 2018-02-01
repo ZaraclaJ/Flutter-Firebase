@@ -37,8 +37,8 @@ class ChatScreenState extends State<ChatScreen> {
     reference.push().set({
       'text': text,
       'imageUrl': imageUrl,
-      'senderName': googleSignIn.currentUser.displayName,
-      'senderPhotoUrl': googleSignIn.currentUser.photoUrl,
+      'senderName': AppContext.of(context).appContextData.currentUser.displayName,
+      'senderPhotoUrl': AppContext.of(context).appContextData.currentUser.photoUrl,
     });
     firebaseAnalytics.logEvent(name: 'send_message');
   }

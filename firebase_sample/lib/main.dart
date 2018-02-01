@@ -1,6 +1,7 @@
 
 import 'package:firebase_sample/app_context.dart';
 import 'package:firebase_sample/chat_screen.dart';
+import 'package:firebase_sample/compare_screen.dart';
 import 'package:firebase_sample/drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -41,7 +42,7 @@ class _AppContainerState extends State<AppContainer> {
 
   @override
   void initState() {
-    appContextData = new AppContextData(personalImage: null, currentPage: new ChatScreen());
+    appContextData = new AppContextData(personalImage: null, currentPage: new CompareScreen());
     super.initState();
   }
 
@@ -50,6 +51,7 @@ class _AppContainerState extends State<AppContainer> {
     return new AppContext(
         appContextData: appContextData,
         ensureLoggedIn: _ensureLoggedIn,
+        updateCurrentUser: _updateCurrentUser,
         updatePersonalImage: _updatePersonalImage,
         updateCurrentPage: _updateCurrentPage,
         child: new FirebaseApp());
@@ -62,8 +64,14 @@ class _AppContainerState extends State<AppContainer> {
     });
   }
 
+  _updateCurrentUser(GoogleSignInAccount user) {
+    setState(() {
+      appContextData = appContextData.withCurrentUser(user);
+    });
+  }
+
   Future<bool> _ensureLoggedIn() async {
-    GoogleSignInAccount user = googleSignIn.currentUser;
+    GoogleSignInAccount user = appContextData.currentUser;
     if (user == null)
       user = await googleSignIn.signInSilently();
     if (user == null) {
@@ -78,9 +86,9 @@ class _AppContainerState extends State<AppContainer> {
       );
     }
     if (googleSignIn.currentUser != null) {
-      _updatePersonalImage(googleSignIn.currentUser.photoUrl);
+      _updateCurrentUser(googleSignIn.currentUser);
     }
-    return googleSignIn.currentUser != null;
+    return user != null;
   }
 
   _updateCurrentPage(Widget page) {
