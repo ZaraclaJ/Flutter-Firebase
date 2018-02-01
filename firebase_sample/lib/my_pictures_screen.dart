@@ -20,17 +20,25 @@ class MyPictureScreen extends StatefulWidget {
 
 class MyPictureScreenState extends State<MyPictureScreen> {
   final reference = FirebaseDatabase.instance.reference().child('images');
-  List<FirebaseImage> images;
+  List<FirebaseImage> images = new List();
 
-  List<FirebaseImage> _getImages(){
-    return [new FirebaseImage(AppContext.of(context).appContextData.currentUser.id, "url1"),
-    new FirebaseImage(AppContext.of(context).appContextData.currentUser.id, "url2"),
-    new FirebaseImage(AppContext.of(context).appContextData.currentUser.id, "url3"),];
+  @override
+  void initState() {
+    _getImages();
+    super.initState();
+  }
+
+  _getImages() {
+    reference.onChildAdded.listen(_onEntryAdded);
+  }
+  _onEntryAdded(Event event) {
+    setState(() {
+      images.add(new FirebaseImage.fromSnapshot(event.snapshot));
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    images = _getImages();
     return new Scaffold(
       appBar: new AppBar(
           title: new Text("My pictures"),
@@ -52,6 +60,7 @@ class MyPictureScreenState extends State<MyPictureScreen> {
               _uploadImage(myImage);
             }
           },
+        child: new Icon(Icons.add),
       ),
       drawer: new DrawerContent(),
       body: new SafeArea(
@@ -64,7 +73,7 @@ class MyPictureScreenState extends State<MyPictureScreen> {
                   child: new Padding(
                     padding: new EdgeInsets.all(4.0),
                     child: new Container(
-                      child: new Text(images[index].url),
+                      child: new Image.network(images[index].url),
                       color: Colors.primaries[index % Colors.primaries.length],
                     ),
                   ),
