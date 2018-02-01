@@ -11,14 +11,21 @@ import 'package:firebase_sample/main.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:image_picker/image_picker.dart';
 
 class MyPictureScreen extends StatefulWidget {
+  final GoogleSignInAccount _user;
+  MyPictureScreen(this._user);
+
   @override
-  State createState() => new MyPictureScreenState();
+  State createState() => new MyPictureScreenState(_user);
 }
 
 class MyPictureScreenState extends State<MyPictureScreen> {
+  final GoogleSignInAccount _user;
+  MyPictureScreenState(this._user);
+
   final reference = FirebaseDatabase.instance.reference().child('images');
   List<FirebaseImage> images = new List();
 
@@ -29,7 +36,7 @@ class MyPictureScreenState extends State<MyPictureScreen> {
   }
 
   _getImages() {
-    reference.onChildAdded.listen(_onEntryAdded);
+    reference.orderByChild("ownerId").equalTo(_user.id).onChildAdded.listen(_onEntryAdded);
   }
   _onEntryAdded(Event event) {
     setState(() {

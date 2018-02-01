@@ -1,7 +1,6 @@
 import 'package:firebase_sample/compare_screen.dart';
 import 'package:firebase_sample/app_context.dart';
 import 'package:firebase_sample/chat_screen.dart';
-import 'package:firebase_sample/main.dart';
 import 'package:firebase_sample/my_pictures_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -40,8 +39,7 @@ class DrawerContent extends StatelessWidget{
         break;
       case PageType.MyPicture :
         if (await AppContext.of(context).ensureLoggedIn()){
-          print(googleSignIn.currentUser);
-          AppContext.of(context).updateCurrentPage(new MyPictureScreen());
+          AppContext.of(context).updateCurrentPage(new MyPictureScreen(AppContext.of(context).appContextData.currentUser));
         } else {
           Scaffold.of(context).showSnackBar(new SnackBar(content: new Text("You must be logged to acces my pictures")));
         }
