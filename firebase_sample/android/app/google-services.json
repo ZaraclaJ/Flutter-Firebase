@@ -8,17 +8,17 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1040723664604:android:fb22e1e6515fc805",
+        "mobilesdk_app_id": "1:1040723664604:android:c0d48f18bcef996b",
         "android_client_info": {
-          "package_name": "com.jordanalcaraz.firebasesample"
+          "package_name": "com.jordanalcaraz.firebasesample.firebasesample"
         }
       },
       "oauth_client": [
         {
-          "client_id": "1040723664604-tq8jbfesngelq61io7pjdddc2jrnevq0.apps.googleusercontent.com",
+          "client_id": "1040723664604-29iv52hofnp5kc494pj29gfcilqocrr2.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.jordanalcaraz.firebasesample",
+            "package_name": "com.jordanalcaraz.firebasesample.firebasesample",
             "certificate_hash": "a39a0b1572ea69e6cb74f2e3e5b9614908c20836"
           }
         },
