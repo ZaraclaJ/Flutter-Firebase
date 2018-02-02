@@ -35,36 +35,47 @@ class CompareScreenState extends State<CompareScreen> {
         child: new Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              new Expanded(
-                child: new InkWell(
-                  onTap: () => _voteTop(context),
-                  child: new Container(
-                    color: Colors.green,
-                    child: new Image.asset("assets/cat/cat2.jpeg"),
-                  ),
-                ),
-              ),
+              new ImageCard(Position.Top),
               new Divider(height: 1.0),
-              new Expanded(
-                child: new InkWell(
-                  onTap: () => _voteBot(context),
-                  child: new Container(
-                    color: Colors.red,
-                    child: new Image.asset("assets/cat/cat1.jpeg"),
-                  ),
-                ),
-              ),
+              new ImageCard(Position.Bot),
             ]
         ),
       ),
     );
   }
+}
 
-  _voteTop(BuildContext context) {
-    Scaffold.of(context).showSnackBar(new SnackBar(content: new Text("You voted for the top picture")));
+enum Position{
+  Top,
+  Bot,
+}
+
+class ImageCard extends StatelessWidget {
+  final Position position;
+
+  ImageCard(this.position);
+
+  @override
+  Widget build(BuildContext context) {
+    return new Expanded(
+      child: new InkWell(
+        onTap: () => _vote(context, position),
+        child: new Container(
+          color: position == Position.Top ? Colors.red : Colors.green,
+          child: position == Position.Top ? new Image.asset("assets/cat/cat1.jpeg") : new Image.asset("assets/cat/cat2.jpeg"),
+        ),
+      ),
+    );
   }
 
-  _voteBot(BuildContext context) {
-    Scaffold.of(context).showSnackBar(new SnackBar(content: new Text("You voted for the bottom picture")));
+  _vote(BuildContext context, Position vote) {
+    switch (vote){
+      case Position.Bot :
+        Scaffold.of(context).showSnackBar(new SnackBar(content: new Text("You voted for the bottom picture")));
+        break;
+      case Position.Top :
+        Scaffold.of(context).showSnackBar(new SnackBar(content: new Text("You voted for the top picture")));
+        break;
+    }
   }
 }
