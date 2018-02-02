@@ -43,6 +43,7 @@ class _AppContainerState extends State<AppContainer> {
   @override
   void initState() {
     appContextData = new AppContextData(personalImage: null, currentPage: new CompareScreen());
+    _ensureLoggedIn();
     super.initState();
   }
 
