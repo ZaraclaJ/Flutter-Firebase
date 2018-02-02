@@ -39,6 +39,7 @@ class MyPictureScreenState extends State<MyPictureScreen> {
     reference.orderByChild("ownerId").equalTo(_user.id).onChildAdded.listen(_onEntryAdded);
   }
   _onEntryAdded(Event event) {
+    print("onAdded");
     setState(() {
       images.add(new FirebaseImage.fromSnapshot(event.snapshot));
     });
@@ -58,13 +59,15 @@ class MyPictureScreenState extends State<MyPictureScreen> {
           onPressed: () async {
             if (await AppContext.of(context).ensureLoggedIn()){
               File imageFile = await ImagePicker.pickImage();
-              int random = new Random().nextInt(100000);
-              String ownerId = AppContext.of(context).appContextData.currentUser.id;
-              StorageReference ref = FirebaseStorage.instance.ref().child("${ownerId}_$random.jpg");
-              StorageUploadTask uploadTask = ref.put(imageFile);
-              Uri downloadUrl = (await uploadTask.future).downloadUrl;
-              FirebaseImage myImage = new FirebaseImage(ownerId, downloadUrl.toString());
-              _uploadImage(myImage);
+              if (imageFile!= null){
+                int random = new Random().nextInt(100000);
+                String ownerId = AppContext.of(context).appContextData.currentUser.id;
+                StorageReference ref = FirebaseStorage.instance.ref().child("${ownerId}_$random.jpg");
+                StorageUploadTask uploadTask = ref.put(imageFile);
+                Uri downloadUrl = (await uploadTask.future).downloadUrl;
+                FirebaseImage myImage = new FirebaseImage(ownerId, downloadUrl.toString());
+                _uploadImage(myImage);
+              }
             }
           },
         child: new Icon(Icons.add),
@@ -73,15 +76,15 @@ class MyPictureScreenState extends State<MyPictureScreen> {
       body: new SafeArea(
         child: new Center(
           child: new GridView.builder(
-              gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 4, ),
+              gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 1, ),
               itemCount: images.length,
               itemBuilder: (BuildContext context, int index) {
                 return new GridTile(
                   child: new Padding(
                     padding: new EdgeInsets.all(4.0),
                     child: new Container(
-                      child: new Image.network(images[index].url),
-                      color: Colors.primaries[index % Colors.primaries.length],
+                      child: new Image.network(images[index].url, fit: BoxFit.cover,),
+                      color: Colors.black,
                     ),
                   ),
                 );
