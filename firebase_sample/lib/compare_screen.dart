@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
+import 'dart:ui' as ui;
 
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_database/ui/firebase_animated_list.dart';
@@ -36,7 +37,7 @@ class CompareScreenState extends State<CompareScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
               new ImageCard(Position.Top),
-              new Divider(height: 1.0),
+              new Divider(height: 8.0,),
               new ImageCard(Position.Bot),
             ]
         ),
@@ -60,9 +61,19 @@ class ImageCard extends StatelessWidget {
     return new Expanded(
       child: new InkWell(
         onTap: () => _vote(context, position),
-        child: new Container(
-          color: position == Position.Top ? Colors.red : Colors.green,
-          child: position == Position.Top ? new Image.asset("assets/cat/cat1.jpeg") : new Image.asset("assets/cat/cat2.jpeg"),
+        child: new Stack(
+          children: <Widget>[
+            position == Position.Bot ? new Image.asset("assets/cat/cat1.jpeg",fit: BoxFit.cover,) : new Image.asset("assets/cat/cat2.jpeg",fit: BoxFit.cover,),
+            new BackdropFilter(
+              filter: new ui.ImageFilter.blur(sigmaX: 30.0, sigmaY: 30.0),
+              child: new Container(
+                decoration: new BoxDecoration(color: Colors.grey[200].withOpacity(0.1)),
+              ),
+            ),
+            position == Position.Bot ? new Image.asset("assets/cat/cat1.jpeg", fit: BoxFit.contain,) : new Image.asset("assets/cat/cat2.jpeg", fit: BoxFit.contain,),
+            
+          ],
+          fit: StackFit.passthrough,
         ),
       ),
     );
