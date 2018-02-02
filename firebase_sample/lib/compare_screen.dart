@@ -20,8 +20,39 @@ class CompareScreen extends StatefulWidget {
 }
 
 class CompareScreenState extends State<CompareScreen> {
-  final reference = FirebaseDatabase.instance.reference().child('images');
-  
+  final _reference = FirebaseDatabase.instance.reference().child('images');
+  List<FirebaseImage> _allCats = new List();
+  Random random = new Random();
+  int randomIndexTop;
+  int randomIndexBot;
+
+  @override
+  void initState() {
+    _getCats();
+    super.initState();
+  }
+
+  _getCats() {
+    _reference.onChildAdded.listen(_onEntryAdded);
+  }
+  _onEntryAdded(Event event) {
+    setState(() {
+      _allCats.add(new FirebaseImage.fromSnapshot(event.snapshot));
+      generateRandomIndexes();
+    });
+  }
+
+  void generateRandomIndexes(){
+    randomIndexTop = random.nextInt(_allCats.length);
+    randomIndexBot = random.nextInt(_allCats.length);
+    int i = 0;
+    while (randomIndexTop == randomIndexBot && i < 50){
+      randomIndexBot = random.nextInt(_allCats.length);
+      i++;
+    }
+    print("top : $randomIndexTop, bot : $randomIndexBot");
+  }
+
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
@@ -37,13 +68,27 @@ class CompareScreenState extends State<CompareScreen> {
         child: new Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              new ImageCard(Position.Top),
+              new ImageCard(Position.Top, _allCats[randomIndexTop], vote),
               new Divider(height: 8.0,),
-              new ImageCard(Position.Bot),
+              new ImageCard(Position.Bot, _allCats[randomIndexBot], vote),
             ]
         ),
       ),
     );
+  }
+
+  vote(BuildContext context, Position vote) {
+    switch (vote){
+      case Position.Bot :
+        Scaffold.of(context).showSnackBar(new SnackBar(content: new Text("You voted for the bottom picture")));
+        break;
+      case Position.Top :
+        Scaffold.of(context).showSnackBar(new SnackBar(content: new Text("You voted for the top picture")));
+        break;
+    }
+    setState(() {
+      generateRandomIndexes();
+    });
   }
 }
 
@@ -54,40 +99,31 @@ enum Position{
 
 class ImageCard extends StatelessWidget {
   final Position position;
+  final FirebaseImage image;
+  final Function(BuildContext context, Position position) vote;
 
-  ImageCard(this.position);
+  ImageCard(this.position, this.image, this.vote);
 
   @override
   Widget build(BuildContext context) {
     return new Expanded(
       child: new InkWell(
-        onTap: () => _vote(context, position),
+        onTap: () => vote(context, position),
         child: new Stack(
           children: <Widget>[
-            position == Position.Bot ? new Image.asset("assets/cat/cat1.jpeg",fit: BoxFit.cover,) : new Image.asset("assets/cat/cat3.jpeg",fit: BoxFit.cover,),
+            new Image.network(image.url,fit: BoxFit.cover,),
             new BackdropFilter(
               filter: new ui.ImageFilter.blur(sigmaX: 30.0, sigmaY: 30.0),
               child: new Container(
                 decoration: new BoxDecoration(color: Colors.grey[200].withOpacity(0.1)),
               ),
             ),
-            position == Position.Bot ? new Image.asset("assets/cat/cat1.jpeg", fit: BoxFit.contain,) : new Image.asset("assets/cat/cat3.jpeg", fit: BoxFit.contain,),
+            new Image.network(image.url,fit: BoxFit.contain,),
           ],
           fit: StackFit.passthrough,
           alignment: Alignment.center,
         ),
       ),
     );
-  }
-
-  _vote(BuildContext context, Position vote) {
-    switch (vote){
-      case Position.Bot :
-        Scaffold.of(context).showSnackBar(new SnackBar(content: new Text("You voted for the bottom picture")));
-        break;
-      case Position.Top :
-        Scaffold.of(context).showSnackBar(new SnackBar(content: new Text("You voted for the top picture")));
-        break;
-    }
   }
 }
