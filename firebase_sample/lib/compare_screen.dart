@@ -7,6 +7,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_database/ui/firebase_animated_list.dart';
 import 'package:firebase_sample/app_context.dart';
 import 'package:firebase_sample/drawer.dart';
+import 'package:firebase_sample/firebase_image.dart';
 import 'package:firebase_sample/main.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
@@ -19,8 +20,8 @@ class CompareScreen extends StatefulWidget {
 }
 
 class CompareScreenState extends State<CompareScreen> {
-  final reference = FirebaseDatabase.instance.reference().child('messages');
-
+  final reference = FirebaseDatabase.instance.reference().child('images');
+  
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
@@ -63,17 +64,17 @@ class ImageCard extends StatelessWidget {
         onTap: () => _vote(context, position),
         child: new Stack(
           children: <Widget>[
-            position == Position.Bot ? new Image.asset("assets/cat/cat1.jpeg",fit: BoxFit.cover,) : new Image.asset("assets/cat/cat2.jpeg",fit: BoxFit.cover,),
+            position == Position.Bot ? new Image.asset("assets/cat/cat1.jpeg",fit: BoxFit.cover,) : new Image.asset("assets/cat/cat3.jpeg",fit: BoxFit.cover,),
             new BackdropFilter(
               filter: new ui.ImageFilter.blur(sigmaX: 30.0, sigmaY: 30.0),
               child: new Container(
                 decoration: new BoxDecoration(color: Colors.grey[200].withOpacity(0.1)),
               ),
             ),
-            position == Position.Bot ? new Image.asset("assets/cat/cat1.jpeg", fit: BoxFit.contain,) : new Image.asset("assets/cat/cat2.jpeg", fit: BoxFit.contain,),
-            
+            position == Position.Bot ? new Image.asset("assets/cat/cat1.jpeg", fit: BoxFit.contain,) : new Image.asset("assets/cat/cat3.jpeg", fit: BoxFit.contain,),
           ],
           fit: StackFit.passthrough,
+          alignment: Alignment.center,
         ),
       ),
     );
