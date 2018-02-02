@@ -35,7 +35,7 @@ class DrawerContent extends StatelessWidget{
         AppContext.of(context).updateCurrentPage(new ChatScreen());
         break;
       case PageType.Compare :
-        AppContext.of(context).updateCurrentPage(new CompareScreen());
+        AppContext.of(context).updateCurrentPage(new CompareScreenContainer());
         break;
       case PageType.MyPicture :
         if (await AppContext.of(context).ensureLoggedIn()){

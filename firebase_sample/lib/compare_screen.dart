@@ -6,6 +6,7 @@ import 'dart:ui' as ui;
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_database/ui/firebase_animated_list.dart';
 import 'package:firebase_sample/app_context.dart';
+import 'package:firebase_sample/compare_context.dart';
 import 'package:firebase_sample/drawer.dart';
 import 'package:firebase_sample/firebase_image.dart';
 import 'package:firebase_sample/main.dart';
@@ -14,20 +15,19 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
-class CompareScreen extends StatefulWidget {
+class CompareScreenContainer extends StatefulWidget {
   @override
-  State createState() => new CompareScreenState();
+  State createState() => new CompareScreenContainerState();
 }
 
-class CompareScreenState extends State<CompareScreen> {
+class CompareScreenContainerState extends State<CompareScreenContainer> {
+  ComparePicturesContextData comparePicturesContextData;
+
   final _reference = FirebaseDatabase.instance.reference().child('images');
-  List<FirebaseImage> _allCats = new List();
-  Random random = new Random();
-  int randomIndexTop;
-  int randomIndexBot;
 
   @override
   void initState() {
+    comparePicturesContextData = new ComparePicturesContextData(allCats: new List(), topIndex: -1, botIndex: -1);
     _getCats();
     super.initState();
   }
@@ -37,21 +37,36 @@ class CompareScreenState extends State<CompareScreen> {
   }
   _onEntryAdded(Event event) {
     setState(() {
-      _allCats.add(new FirebaseImage.fromSnapshot(event.snapshot));
-      generateRandomIndexes();
+      comparePicturesContextData.allCats.add(new FirebaseImage.fromSnapshot(event.snapshot));
+      _updateIndexes();
     });
   }
 
-  void generateRandomIndexes(){
-    randomIndexTop = random.nextInt(_allCats.length);
-    randomIndexBot = random.nextInt(_allCats.length);
+  _updateIndexes() {
+    Random random = new Random();
+    int randomIndexTop = random.nextInt(comparePicturesContextData.allCats.length);
+    int randomIndexBot = random.nextInt(comparePicturesContextData.allCats.length);
     int i = 0;
     while (randomIndexTop == randomIndexBot && i < 50){
-      randomIndexBot = random.nextInt(_allCats.length);
+      randomIndexBot = random.nextInt(comparePicturesContextData.allCats.length);
       i++;
     }
-    print("top : $randomIndexTop, bot : $randomIndexBot");
+    setState(() {
+      comparePicturesContextData = comparePicturesContextData.withIndexes(randomIndexTop, randomIndexBot);
+    });
   }
+
+  @override
+  Widget build(BuildContext context) {
+    return new ComparePicturesContext(
+        child: new CompareScreen(),
+        comparePicturesContextData: comparePicturesContextData,
+        updateIndexes: _updateIndexes,
+    );
+  }
+}
+
+class CompareScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
@@ -67,28 +82,24 @@ class CompareScreenState extends State<CompareScreen> {
       body: new SafeArea(
         child: new Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              new ImageCard(Position.Top, _allCats[randomIndexTop], vote),
-              new Divider(height: 8.0,),
-              new ImageCard(Position.Bot, _allCats[randomIndexBot], vote),
-            ]
+            children: _getPage(context)
         ),
       ),
     );
   }
 
-  vote(BuildContext context, Position vote) {
-    switch (vote){
-      case Position.Bot :
-        Scaffold.of(context).showSnackBar(new SnackBar(content: new Text("You voted for the bottom picture")));
-        break;
-      case Position.Top :
-        Scaffold.of(context).showSnackBar(new SnackBar(content: new Text("You voted for the top picture")));
-        break;
+  _getPage(BuildContext context) {
+    if (ComparePicturesContext.of(context).comparePicturesContextData.topIndex != -1 && ComparePicturesContext.of(context).comparePicturesContextData.botIndex != -1){
+      return <Widget>[
+        new ImageCard(Position.Top, ComparePicturesContext.of(context).comparePicturesContextData.allCats[ComparePicturesContext.of(context).comparePicturesContextData.topIndex]),
+        new Divider(height: 8.0,),
+        new ImageCard(Position.Bot, ComparePicturesContext.of(context).comparePicturesContextData.allCats[ComparePicturesContext.of(context).comparePicturesContextData.botIndex]),
+      ];
+    } else {
+      return <Widget>[
+        new Container(),
+      ];
     }
-    setState(() {
-      generateRandomIndexes();
-    });
   }
 }
 
@@ -100,9 +111,8 @@ enum Position{
 class ImageCard extends StatelessWidget {
   final Position position;
   final FirebaseImage image;
-  final Function(BuildContext context, Position position) vote;
 
-  ImageCard(this.position, this.image, this.vote);
+  ImageCard(this.position, this.image);
 
   @override
   Widget build(BuildContext context) {
@@ -125,5 +135,17 @@ class ImageCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  vote(BuildContext context, Position vote) {
+//    switch (vote){
+//      case Position.Bot :
+//        Scaffold.of(context).showSnackBar(new SnackBar(content: new Text("You voted for the bottom picture")));
+//        break;
+//      case Position.Top :
+//        Scaffold.of(context).showSnackBar(new SnackBar(content: new Text("You voted for the top picture")));
+//        break;
+//    }
+    ComparePicturesContext.of(context).updateIndexes();
   }
 }
